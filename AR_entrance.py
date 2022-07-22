@@ -76,9 +76,6 @@ class AR_render:
         glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
         glutInitWindowSize(width, height)
         glutInitWindowPosition(pos_x, pos_y)
-     
-        
-        
         
         self.window_id = glutCreateWindow(window_name)
         glutDisplayFunc(self.draw_scene)
@@ -178,7 +175,6 @@ class AR_render:
         # aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)      
         aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_250)      
         parameters =  aruco.DetectorParameters_create()
-        # parameters.adaptiveThreshConstant = True
 
         height, width, channels = image.shape
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -190,9 +186,9 @@ class AR_render:
             rvecs, tvecs, _= aruco.estimatePoseSingleMarkers(corners, mark_size , self.cam_matrix, self.dist_coefs)
             new_rvecs = rvecs[0,:,:]
             new_tvecs = tvecs[0,:,:]
-            test = draw_axis(image, new_rvecs, new_tvecs, self.cam_matrix, self.dist_coefs)
-            # for i in range(rvecs.shape[0]):
-            #     aruco.drawAxis(image, self.cam_matrix, self.dist_coefs, rvecs[i, :, :], tvecs[i, :, :], 0.03)
+            # test = draw_axis(image, new_rvecs, new_tvecs, self.cam_matrix, self.dist_coefs)
+            for i in range(rvecs.shape[0]):
+                cv2.drawFrameAxes(image, self.cam_matrix, self.dist_coefs, rvecs[i, :, :], tvecs[i, :, :], 0.03)
             
         projectMatrix = intrinsic2Project(self.cam_matrix, width, height, 0.01, 100.0)
         glMatrixMode(GL_PROJECTION)
@@ -218,7 +214,8 @@ class AR_render:
             self.pre_extrinsicMatrix = model_matrix
             glLoadMatrixf(model_matrix)
             glScaled(self.model_scale, self.model_scale, self.model_scale)
-            glTranslatef(self.translate_x, self.translate_y, self.translate_y)
+            glTranslatef(self.translate_x, self.translate_y, self.translate_z)
+
             glCallList(self.model.gl_list)
             
         cv2.imshow("Frame",image)
@@ -240,15 +237,20 @@ class AR_render:
             self.model_scale += 0.01
         elif key == '-':
             self.model_scale -= 0.01
-        elif key == 'w':
+        elif key == 'x':
             self.translate_x -= 0.01
-        elif key == 's':
+        elif key == 'X':
             self.translate_x += 0.01
-        elif key == 'a':
+        elif key == 'y':
             self.translate_y -= 0.01
-        elif key == 'd':
+        elif key == 'Y':
             self.translate_y += 0.01
-             
+        elif key == 'z':
+            self.translate_z -= 0.01
+        elif key == 'Z':
+            self.translate_z += 0.01 
+        elif key == '0':
+            self.translate_x, self.translate_y, self.translate_z = 0, 0, 0
         
     def run(self):
         # Begin to render
@@ -265,6 +267,6 @@ if __name__ == "__main__":
 
     # dist_coeff = np.array([0.49921041, -2.2731793, -0.01392174, 0.01677649, 3.99742617])    
     dist_coeff = np.array([ 2.84542709e-01,-1.92052859e+00,1.35772811e-05,-7.62765800e-04,4.00245238e+00]) 
-    # ar_instance = AR_render(cam_matrix, dist_coeff, './Models/plastic_cup/Plastic_Cup.obj', model_scale = 0.02)
-    ar_instance = AR_render(cam_matrix, dist_coeff, './Models/Monster/Sinbad_4_000001.obj', model_scale = 0.02)
+    ar_instance = AR_render(cam_matrix, dist_coeff, './Models/plastic_cup/Plastic_Cup.obj', model_scale = 0.02)
+    # ar_instance = AR_render(cam_matrix, dist_coeff, './Models/Monster/Sinbad_4_000001.obj', model_scale = 0.02)
     ar_instance.run() 

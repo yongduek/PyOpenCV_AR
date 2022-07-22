@@ -11,6 +11,7 @@ def extrinsic2ModelView(RVEC, TVEC, R_vector = True):
     
     R, _ = cv2.Rodrigues(RVEC)
     
+    ## OpenCV to OpenGL
     Rx = np.array([
         [1, 0, 0],
         [0, -1, 0],
@@ -19,14 +20,19 @@ def extrinsic2ModelView(RVEC, TVEC, R_vector = True):
 
     TVEC = TVEC.flatten().reshape((3, 1))
 
-    
-    transform_matrix = Rx @ np.hstack((R, TVEC))
+    cvPose = np.hstack((R, TVEC))
+    transform_matrix = Rx @ cvPose
     M = np.eye(4)
     M[:3, :] = transform_matrix
+
+    print("ModelView: ")
+    print(cvPose)
+
     return M.T.flatten()
 
 
-def intrinsic2Project(MTX, width, height, near_plane=0.01, far_plane=100.0):
+# def intrinsic2Project(MTX, width, height, near_plane=0.01, far_plane=100.0):
+def intrinsic2Project(MTX, width, height, near_plane=1., far_plane=100.0):
     """[Get ]
 
     Arguments:
@@ -48,11 +54,17 @@ def intrinsic2Project(MTX, width, height, near_plane=0.01, far_plane=100.0):
     
     
     P[0, 0] = 2 * fx / width
-    P[1, 1] = 2 * fy / height
+    P[1, 1] = 2 * fy / (height)
     P[2, 0] = 1 - 2 * cx / width
     P[2, 1] = 2 * cy / height - 1
     P[2, 2] = -(far_plane + near_plane) / (far_plane - near_plane)
     P[2, 3] = -1.0
     P[3, 2] = - (2 * far_plane * near_plane) / (far_plane - near_plane)
+
+    print("near, far: ", near_plane, far_plane)
+    print("Intrinsic: ")
+    print(MTX)
+    print("Projection Matrix Transpose")
+    print(P) 
 
     return P.flatten()
