@@ -31,6 +31,9 @@ class AR_render:
         # self.webcam = cv2.VideoCapture(0)
         self.webcam = cv2.VideoCapture(0)
         self.image_w, self.image_h = map(int, (self.webcam.get(3), self.webcam.get(4)))
+###
+        self.image_w, self.image_h = 640, 480
+###
         self.initOpengl(self.image_w, self.image_h)
         self.model_scale = model_scale
     
@@ -103,7 +106,10 @@ class AR_render:
     def draw_scene(self):
         """[Opengl render loop]
         """
-        _, image = self.webcam.read()# get image from webcam camera.
+#        _, image = self.webcam.read()# get image from webcam camera.
+##
+        image = cv2.imread("aruco.jpg")
+##
         self.draw_background(image)  # draw background
         # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         self.draw_objects(image, mark_size = 0.06) # draw the 3D objects.
@@ -169,9 +175,10 @@ class AR_render:
             mark_size {float} -- [aruco mark size: unit is meter] (default: {0.07})
         """
         # aruco data
-        aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)      
+        # aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)      
+        aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_250)      
         parameters =  aruco.DetectorParameters_create()
-        parameters.adaptiveThreshConstant = True
+        # parameters.adaptiveThreshConstant = True
 
         height, width, channels = image.shape
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -196,14 +203,16 @@ class AR_render:
         glLoadIdentity()
        
         
-        if tvecs is not None:
-            if self.filter.update(tvecs): # the mark is moving
-                model_matrix = extrinsic2ModelView(rvecs, tvecs)
-            else:
-                model_matrix = self.pre_extrinsicMatrix
-        else:
-            model_matrix =  self.pre_extrinsicMatrix
-        
+        # if tvecs is not None:
+        #     if self.filter.update(tvecs): # the mark is moving
+        #         model_matrix = extrinsic2ModelView(rvecs, tvecs)
+        #     else:
+        #         model_matrix = self.pre_extrinsicMatrix
+        # else:
+        #     model_matrix =  self.pre_extrinsicMatrix
+
+        model_matrix = extrinsic2ModelView(rvecs, tvecs)
+        # print(model_matrix)
             
         if model_matrix is not None:     
             self.pre_extrinsicMatrix = model_matrix
@@ -213,7 +222,9 @@ class AR_render:
             glCallList(self.model.gl_list)
             
         cv2.imshow("Frame",image)
-        cv2.waitKey(20)
+        ch = cv2.waitKey(20)
+        # print(int(ch))
+        if ch == 32: exit()
         
 
     def keyBoardListener(self, key, x, y):
@@ -254,5 +265,6 @@ if __name__ == "__main__":
 
     # dist_coeff = np.array([0.49921041, -2.2731793, -0.01392174, 0.01677649, 3.99742617])    
     dist_coeff = np.array([ 2.84542709e-01,-1.92052859e+00,1.35772811e-05,-7.62765800e-04,4.00245238e+00]) 
-    ar_instance = AR_render(cam_matrix, dist_coeff, './Models/plastic_cup/Plastic_Cup.obj', model_scale = 0.03)
+    # ar_instance = AR_render(cam_matrix, dist_coeff, './Models/plastic_cup/Plastic_Cup.obj', model_scale = 0.02)
+    ar_instance = AR_render(cam_matrix, dist_coeff, './Models/Monster/Sinbad_4_000001.obj', model_scale = 0.02)
     ar_instance.run() 
